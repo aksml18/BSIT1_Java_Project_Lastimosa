@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Budget Tracker</title>
+  <style>
+    /* ── Design tokens ──────────────────────────────────── */
+    :root {
+      --accent:      #7F77DD;
+      --accent-dark: #5F57C0;
+      --surface:     #EEEDFE;
+      --white:       #FFFFFF;
+      --bg:          #F5F5FA;
+      --text:        #2D2D3A;
+      --text-muted:  #7A7A95;
+      --border:      #DDDCF0;
+      --danger:      #E05C5C;
+      --danger-dark: #C04040;
+      --success:     #4CAF80;
+      --warning:     #E0A030;
+      --radius:      12px;
+      --shadow:      0 2px 12px rgba(127,119,221,0.10);
+      --shadow-lg:   0 4px 24px rgba(127,119,221,0.18);
+    }
+
+    /* ── Reset ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%);
+      color: var(--white);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .header-left h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .header-left p {
+      font-size: 0.8rem;
+      opacity: 0.82;
+      margin-top: 2px;
+    }
+    .header-date {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      text-align: right;
+    }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .full { grid-column: 1 / -1; }
+
+    /* ── Cards ──────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent-dark);
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title svg { flex-shrink: 0; }
+
+    /* ── Dashboard balance tiles ────────────────────────── */
+    .balance-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.9rem;
+    }
+    .balance-tile {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 1rem 1rem 0.9rem;
+      text-align: center;
+    }
+    .balance-tile .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .balance-tile .value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--accent-dark);
+    }
+    .balance-tile.remaining .value { color: var(--accent-dark); }
+    .balance-tile.spent    .value  { color: var(--text); }
+    .balance-tile.budget   .value  { color: var(--success); }
+    .balance-tile .type-badge {
+      font-size: 0.68rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 20px;
+      padding: 1px 8px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    #remaining-val.over-budget { color: var(--danger) !important; }
+
+    /* ── Progress bar ───────────────────────────────────── */
+    .progress-wrap {
+      margin-top: 1.1rem;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .progress-bar-bg {
+      height: 10px;
+      background: var(--surface);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dark) 100%);
+      border-radius: 20px;
+      transition: width 0.45s ease;
+    }
+    #progress-fill.over-budget {
+      background: linear-gradient(90deg, var(--warning), var(--danger));
+    }
+
+    /* ── Forms ──────────────────────────────────────────── */
+    .form-group {
+      margin-bottom: 0.9rem;
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.35rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.92rem;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    /* ── Buttons ────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.4rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-sm {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+    }
+    .btn-danger {
+      background: #fde8e8;
+      color: var(--danger-dark);
+    }
+    .btn-danger:hover { background: #f8d0d0; }
+    .btn-full { width: 100%; }
+
+    /* ── Toast notifications ────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--success); }
+    #toast.error   { background: var(--danger); }
+    #toast.info    { background: var(--accent); }
+
+    /* ── Table ──────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    thead th {
+      background: var(--surface);
+      color: var(--accent-dark);
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface); }
+    td { padding: 0.65rem 0.85rem; vertical-align: middle; }
+    td.amount { font-weight: 700; color: var(--accent-dark); }
+    td.date   { color: var(--text-muted); font-size: 0.82rem; }
+    .category-badge {
+      display: inline-block;
+      background: var(--surface);
+      color: var(--accent-dark);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.77rem;
+      font-weight: 600;
+    }
+
+    #no-expenses {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Chart ──────────────────────────────────────────── */
+    #chart-canvas {
+      width: 100%;
+      display: block;
+    }
+    #chart-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 760px) {
+      main {
+        grid-template-columns: 1fr;
+        padding: 1rem 0.85rem 2rem;
+      }
+      .full { grid-column: 1; }
+      .balance-grid { grid-template-columns: 1fr; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <h1>Student Budget Tracker</h1>
+    <p>Track every peso. Stay on budget.</p>
+  </div>
+  <div class="header-date" id="header-date"></div>
+</header>
+
+<!-- ── Main grid ──────────────────────────────────────── -->
+<main>
+
+  <!-- 1. Budget Setup -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        <circle cx="12" cy="12" r="4"/>
+      </svg>
+      Set Budget
+    </div>
+    <form id="budget-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="budget-type">Period</label>
+          <select id="budget-type">
+            <option value="weekly">Weekly</option>
+            <option value="monthly" selected>Monthly</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="budget-amount">Amount (₱)</label>
+          <input type="number" id="budget-amount" min="0.01" step="0.01"
+                 placeholder="e.g. 3000" required />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Save Budget</button>
+    </form>
+  </div>
+
+  <!-- 2. Dashboard -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <path d="M8 21h8m-4-4v4"/>
+      </svg>
+      Balance Overview
+    </div>
+    <div class="balance-grid">
+      <div class="balance-tile remaining">
+        <div class="label">Remaining</div>
+        <div class="value" id="remaining-val">₱0.00</div>
+      </div>
+      <div class="balance-tile spent">
+        <div class="label">Spent</div>
+        <div class="value" id="spent-val">₱0.00</div>
+      </div>
+      <div class="balance-tile budget">
+        <div class="label">Budget</div>
+        <div class="value" id="budget-val">₱0.00</div>
+        <div class="type-badge" id="budget-type-badge">monthly</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-labels">
+        <span>₱0</span>
+        <span id="progress-pct">0% used</span>
+        <span id="progress-max">₱0</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Add Expense (full width) -->
+  <div class="card full">
+    <div class="card-title">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v8m-4-4h8"/>
+      </svg>
+      Log Expense
+    </div>
+    <form id="expense-form">
+      <div class="form-row-3">
+        <div class="form-group">
+          <label for="exp-amount">Amount (₱)</label>
+          <input type="number" id="exp-amount" min="0.01" step="0.01"
+                 placeholder="e.g. 150" required />
+        </div>
+        <div class="form-group">
+          <label for="exp-category">Category</label>
+          <input type="text" id="exp-category" list="category-list"
+                 placeholder="e.g. Food" required autocomplete="off" />
+          <datalist id="category-list">
+            <option value="Food &amp; Drinks"/>
+            <option value="Transportation"/>
+            <option value="School Supplies"/>
+            <option value="Entertainment"/>
+            <option value="Health"/>
+            <option value="Clothing"/>
+            <option value="Utilities"/>
+            <option value="Others"/>
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="exp-date">Date</label>
+          <input type="date" id="exp-date" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="exp-note">Note (optional)</label>
+        <input type="text" id="exp-note" placeholder="What was this for?" />
+      </div>
+      <button type="submit" class="btn btn-primary">Add Expense</button>
+    </form>
+  </div>
+
+  <!-- 4. Category Breakdown -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 20V10m-6 10V4M6 20v-6"/>
+      </svg>
+      Category Breakdown
+    </div>
+    <div id="chart-empty" style="display:none">No expenses yet.</div>
+    <canvas id="chart-canvas" height="0"></canvas>
+  </div>
+
+  <!-- 5. Expense History (full width) -->
+  <div class="card full">
+    <div class="card-title">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+        <path d="M9 12h6m-6 4h4"/>
+      </svg>
+      Expense History
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="expense-tbody">
+          <tr><td colspan="5" id="no-expenses">No expenses recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Toast ───────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── JavaScript ─────────────────────────────────────── -->
+<script>
+  /* ── Utility helpers ────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+
+  function fmt(n) {
+    return '₱' + Number(n).toLocaleString('en-PH', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+  }
+
+  let toastTimer;
+  function showToast(msg, type = 'info') {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+  }
+
+  /* ── Date helpers ───────────────────────────────────── */
+  function todayISO() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function setHeaderDate() {
+    $('header-date').textContent = new Date().toLocaleDateString('en-PH', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+
+  /* ── API wrappers ───────────────────────────────────── */
+  async function apiGet(path) {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+    return res.json();
+  }
+
+  async function apiPost(path, body) {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `POST ${path} → ${res.status}`);
+    return data;
+  }
+
+  async function apiDelete(path) {
+    const res = await fetch(path, { method: 'DELETE' });
+    if (res.status === 404) throw new Error('Expense not found.');
+    if (!res.ok) throw new Error(`DELETE ${path} → ${res.status}`);
+  }
+
+  /* ── Dashboard update ───────────────────────────────── */
+  function updateDashboard(summary) {
+    const budget    = summary.budget    || {};
+    const spent     = summary.totalSpent    || 0;
+    const remaining = summary.remainingBalance || 0;
+    const total     = budget.amount || 0;
+    const pct       = total > 0 ? Math.min((spent / total) * 100, 100) : 0;
+    const over      = remaining < 0;
+
+    $('remaining-val').textContent = fmt(remaining);
+    $('remaining-val').classList.toggle('over-budget', over);
+    $('spent-val').textContent     = fmt(spent);
+    $('budget-val').textContent    = fmt(total);
+    $('budget-type-badge').textContent = budget.type || 'monthly';
+
+    const fill = $('progress-fill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('over-budget', over);
+
+    $('progress-pct').textContent  = pct.toFixed(1) + '% used';
+    $('progress-max').textContent  = fmt(total);
+
+    // Pre-fill the budget form with current values
+    if (budget.type)   $('budget-type').value   = budget.type;
+    if (budget.amount) $('budget-amount').value = budget.amount;
+  }
+
+  /* ── Bar chart ──────────────────────────────────────── */
+  function drawChart(breakdown) {
+    const canvas  = $('chart-canvas');
+    const empty   = $('chart-empty');
+    const entries = Object.entries(breakdown);
+
+    if (entries.length === 0) {
+      canvas.style.display = 'none';
+      empty.style.display  = 'block';
+      return;
+    }
+    canvas.style.display = 'block';
+    empty.style.display  = 'none';
+
+    // Sort by amount descending
+    entries.sort((a, b) => b[1] - a[1]);
+
+    const BAR_H   = 34;
+    const GAP     = 12;
+    const LABEL_W = 130;
+    const AMOUNT_W = 80;
+    const PADDING  = 16;
+    const totalH   = entries.length * (BAR_H + GAP) + PADDING * 2;
+
+    canvas.width  = canvas.parentElement.clientWidth || 400;
+    canvas.height = totalH;
+
+    const ctx    = canvas.getContext('2d');
+    const maxVal = entries[0][1];
+    const barMax = canvas.width - LABEL_W - AMOUNT_W - PADDING * 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Palette cycles through accent shades
+    const colors = [
+      '#7F77DD', '#9E98E5', '#B9B5EE',
+      '#5F57C0', '#CCC9F5', '#4A44A8'
+    ];
+
+    entries.forEach(([cat, amt], i) => {
+      const y   = PADDING + i * (BAR_H + GAP);
+      const barW = maxVal > 0 ? (amt / maxVal) * barMax : 0;
+      const color = colors[i % colors.length];
+
+      // Label (left)
+      ctx.fillStyle = '#7A7A95';
+      ctx.font      = '600 12px Segoe UI, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(cat.length > 15 ? cat.substring(0, 14) + '…' : cat,
+                   LABEL_W, y + BAR_H / 2);
+
+      // Bar background
+      ctx.fillStyle = '#EEEDFE';
+      ctx.beginPath();
+      ctx.roundRect(LABEL_W + PADDING, y, barMax, BAR_H, 6);
+      ctx.fill();
+
+      // Bar fill
+      if (barW > 0) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(LABEL_W + PADDING, y, barW, BAR_H, 6);
+        ctx.fill();
+      }
+
+      // Amount (right)
+      ctx.fillStyle = '#2D2D3A';
+      ctx.font      = '700 12px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(fmt(amt), LABEL_W + PADDING + barMax + 8, y + BAR_H / 2);
+    });
+  }
+
+  /* ── Expense table ──────────────────────────────────── */
+  function renderExpenses(expenses) {
+    const tbody = $('expense-tbody');
+    tbody.innerHTML = '';
+
+    if (!expenses.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="5" id="no-expenses">No expenses recorded yet.</td></tr>';
+      return;
+    }
+
+    expenses.forEach(exp => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="date">${exp.date}</td>
+        <td><span class="category-badge">${escHtml(exp.category)}</span></td>
+        <td class="amount">${fmt(exp.amount)}</td>
+        <td>${escHtml(exp.note || '—')}</td>
+        <td>
+          <button class="btn btn-danger btn-sm"
+                  onclick="deleteExpense(${exp.id})">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ── Load all data ──────────────────────────────────── */
+  async function loadAll() {
+    try {
+      const [summary, expenses] = await Promise.all([
+        apiGet('/api/summary'),
+        apiGet('/api/expenses')
+      ]);
+      updateDashboard(summary);
+      drawChart(summary.categoryBreakdown || {});
+      renderExpenses(expenses);
+    } catch (err) {
+      showToast('Failed to load data: ' + err.message, 'error');
+    }
+  }
+
+  /* ── Form: Set Budget ───────────────────────────────── */
+  $('budget-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const type   = $('budget-type').value;
+    const amount = parseFloat($('budget-amount').value);
+    if (!amount || amount <= 0) {
+      showToast('Please enter a valid budget amount.', 'error'); return;
+    }
+    try {
+      await apiPost('/api/budget', { type, amount });
+      showToast('Budget saved!', 'success');
+      loadAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  /* ── Form: Add Expense ──────────────────────────────── */
+  $('expense-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const amount   = parseFloat($('exp-amount').value);
+    const category = $('exp-category').value.trim();
+    const date     = $('exp-date').value;
+    const note     = $('exp-note').value.trim();
+
+    if (!amount || amount <= 0) {
+      showToast('Please enter a valid amount.', 'error'); return;
+    }
+    if (!category) {
+      showToast('Please select or enter a category.', 'error'); return;
+    }
+    if (!date) {
+      showToast('Please select a date.', 'error'); return;
+    }
+    try {
+      await apiPost('/api/expenses', { amount, category, date, note });
+      showToast('Expense added!', 'success');
+      $('expense-form').reset();
+      $('exp-date').value = todayISO();
+      loadAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  /* ── Delete expense ─────────────────────────────────── */
+  async function deleteExpense(id) {
+    if (!confirm('Delete this expense?')) return;
+    try {
+      await apiDelete('/api/expenses/' + id);
+      showToast('Expense deleted.', 'info');
+      loadAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  /* ── Redraw chart on window resize ──────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(loadAll, 250);
+  });
+
+  /* ── Init ───────────────────────────────────────────── */
+  setHeaderDate();
+  $('exp-date').value = todayISO();
+  loadAll();
+</script>
+</body>
+</html>
