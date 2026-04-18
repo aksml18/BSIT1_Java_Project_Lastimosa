@@ -117,7 +117,7 @@ To stop the app press **Ctrl + C**.
 
 | Lesson | Where | What it does |
 |---|---|---|
-| OOP / Encapsulation | `Expense.java`, `Budget.java` | Model classes with private fields and getters/setters |
+| Lesson 1.1 | `Expense.java`, `Budget.java` | Model classes with private fields and getters/setters |
 | Interface | `BudgetService.java` | Defines what the service can do without implementing it |
 | Interface Implementation | `BudgetServiceImpl.java` | Implements the interface using `implements BudgetService` |
 | Collections - ArrayList | `BudgetServiceImpl.java` | Stores and returns the list of expenses |
