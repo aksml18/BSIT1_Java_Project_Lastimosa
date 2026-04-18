@@ -117,13 +117,12 @@ To stop the app press **Ctrl + C**.
 
 | Lesson | Where | What it does |
 |---|---|---|
-| Lesson 1.1 | `Expense.java`, `Budget.java` | Model classes with private fields and getters/setters |
-| Interface | `BudgetService.java` | Defines what the service can do without implementing it |
-| Interface Implementation | `BudgetServiceImpl.java` | Implements the interface using `implements BudgetService` |
-| Collections - ArrayList | `BudgetServiceImpl.java` | Stores and returns the list of expenses |
-| Collections - HashMap | `BudgetServiceImpl.java` | Groups expenses by category and totals each one |
-| JDBC | `DatabaseRepository.java` | Saves and loads data from the SQLite database using SQL |
-| Exception Handling | `DatabaseRepository.java`, `BudgetController.java` | try-catch blocks to handle errors and return proper responses |
+| Lesson 1.1. if Statement | `BudgetServiceImpl.java` | Used to check for null values or basic 
+validation (e.g., checking if a budget exists before trying to update it). |
+| Lesson 2.3. For Loop| `BudgetServiceImpl.java` `getTotalSpent() method` | Specifically a for-each loop used to iterate through the list of expenses to calculate a sum. |
+| Lesson 3.2. One Dimensional Arrays | `BudgetServiceImpl.java` `getCategoryBreakdown()`   |  The ArrayList<Expense> acts as a dynamic 1D array of objects. |
+| Lesson 4.3. No Parameters but With Return Values | `BudgetServiceImpl.java` `getBudget() and getTotalSpent()` | Takes no input and returns data to the caller. |
+| Lesson 4.5. With Parameters and Return Values | `DatabaseRepository.java` `addExpense(Expense expense)` |  Takes an object as input, processes/saves it, and returns the saved object. |
 
 ---
 
