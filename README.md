@@ -156,7 +156,7 @@ src/main/resources/
 |---|---|
 | *(Lastimosa, Angel Kael)* | Backend / Spring Boot / HTML-CSS-JS |
 | *(Palma, Nikki Jvence)* | Frontend /  Documentation / Testing  |
-| *(Torres, Julianna Michaela)* | Database / JDBC |
+| *(Torres, Julianna Michaela)* | Database / Documentation |
 
 ---
 
