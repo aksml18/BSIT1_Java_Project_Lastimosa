@@ -117,8 +117,7 @@ To stop the app press **Ctrl + C**.
 
 | Lesson | Where | What it does |
 |---|---|---|
-| Lesson 1.1. if Statement | `BudgetServiceImpl.java` | Used to check for null values or basic 
-validation (e.g., checking if a budget exists before trying to update it). |
+| Lesson 1.1. if Statement | `BudgetServiceImpl.java` | Used to check for null values or basic validation (e.g., checking if a budget exists before trying to update it). |
 | Lesson 2.3. For Loop| `BudgetServiceImpl.java` `getTotalSpent() method` | Specifically a for-each loop used to iterate through the list of expenses to calculate a sum. |
 | Lesson 3.2. One Dimensional Arrays | `BudgetServiceImpl.java` `getCategoryBreakdown()`   |  The ArrayList<Expense> acts as a dynamic 1D array of objects. |
 | Lesson 4.3. No Parameters but With Return Values | `BudgetServiceImpl.java` `getBudget() and getTotalSpent()` | Takes no input and returns data to the caller. |
